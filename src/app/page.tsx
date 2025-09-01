@@ -1,103 +1,95 @@
-import Image from "next/image";
+import Link from 'next/link';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Lock, ListChecks, PanelsTopLeft, Filter, CalendarClock, SquareCheckBig } from 'lucide-react';
 
-export default function Home() {
+export default function HomePage() {
   return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+    <main className="min-h-[calc(100vh-3.5rem)] bg-gradient-to-b from-muted/40 to-background">
+      <section className="container mx-auto max-w-5xl px-4 py-12 md:py-16">
+        {/* Kicker */}
+        <p className="mb-3 text-center text-xs font-medium tracking-wide text-muted-foreground">
+          NEXT.JS 15+ • SUPABASE • SHADCN/UI
+        </p>
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+        {/* HERO */}
+        <h1 className="text-center text-4xl font-bold tracking-tight text-foreground md:text-5xl">
+          Hola para tu portafolio
+        </h1>
+        <p className="mx-auto mt-3 max-w-2xl text-center text-sm text-muted-foreground md:text-base">
+          Autenticación segura, CRUD de tareas, filtros avanzados, prioridades y fechas con una UI moderna.
+        </p>
+
+        {/* CTAs */}
+        <div className="mt-6 flex items-center justify-center gap-3">
+          <Button asChild size="lg">
+            <Link href="/signup">Crear cuenta</Link>
+          </Button>
+          <Button asChild size="lg" variant="outline">
+            <Link href="/login">Iniciar sesión</Link>
+          </Button>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
+
+        <p className="mt-4 text-center text-xs text-muted-foreground">
+          Al crear una cuenta aceptas las políticas de demo. No se guardan datos personales sensibles.
+        </p>
+
+        {/* FEATURES */}
+        <div className="mt-10 grid gap-4 md:mt-12 md:grid-cols-2">
+          <Feature
+            icon={<Lock className="size-5" />}
+            title="Auth + RLS"
+            desc="Supabase Auth y RLS. Cada usuario ve solo sus datos."
           />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
+          <Feature
+            icon={<ListChecks className="size-5" />}
+            title="CRUD completo"
+            desc="Crear, editar, completar, eliminar. Categorías y prioridades."
           />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
+          <Feature
+            icon={<PanelsTopLeft className="size-5" />}
+            title="UI productiva"
+            desc="shadcn/ui + Tailwind. Accesible, responsive y lista para presentar."
           />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+          <Feature
+            icon={<Filter className="size-5" />}
+            title="Filtros & búsqueda"
+            desc="Estado, categoría y prioridad. Búsqueda por texto."
+          />
+          <Feature
+            icon={<CalendarClock className="size-5" />}
+            title="Fechas & contadores"
+            desc="Vencimiento y contador de tareas activas."
+          />
+          <Feature
+            icon={<SquareCheckBig className="size-5" />}
+            title="Bulk actions"
+            desc="Selecciona varias y aplica acciones en un clic."
+          />
+        </div>
+      </section>
+    </main>
+  );
+}
+
+function Feature({
+  icon,
+  title,
+  desc,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  desc: string;
+}) {
+  return (
+    <Card className="transition-shadow hover:shadow-md">
+      <CardContent className="flex items-start gap-3 p-5">
+        <div className="mt-0.5 rounded-md bg-primary/10 p-2 text-primary">{icon}</div>
+        <div>
+          <h3 className="text-base font-semibold leading-none">{title}</h3>
+          <p className="mt-1 text-sm text-muted-foreground">{desc}</p>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
