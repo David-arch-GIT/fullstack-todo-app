@@ -11,97 +11,141 @@ export type Filters = {
   status: StatusFilter;
   priority: PriorityFilter;
   categoryId: 'all' | string;
-  q: string; // búsqueda por texto
+  q: string;
 };
+
+const DEFAULT_CATEGORIES = ['Personal', 'Trabajo', 'Estudio', 'Salud', 'Finanzas'];
 
 export function useTodos(userId: string | null) {
   const [todos, setTodos] = useState<Todo[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
-
   const refreshCategories = useCallback(async () => {
-    const { data, error } = await supabase
-      .from('categories')
-      .select('*')
-      .order('name', { ascending: true });
-
-    if (!error && data) setCategories(data as Category[]);
-  }, []);
-
-  const refresh = useCallback(async (filters?: Partial<Filters>) => {
     if (!userId) return;
     setLoading(true);
-
-    let q = supabase
-      .from('todos')
-      .select('*, category:categories(*)')
-      .order('inserted_at', { ascending: false });
-
-    // Filtros: se aplican si vienen en filters (útil para la primera carga) o si son "actuales".
-    // Para simplificar, dejamos que quien llame pase los valores que quiera.
-    if (filters?.status === 'active') q = q.eq('completed', false);
-    if (filters?.status === 'completed') q = q.eq('completed', true);
-    if (filters?.priority && filters.priority !== 'all') q = q.eq('priority', filters.priority);
-    if (filters?.categoryId && filters.categoryId !== 'all') q = q.eq('category_id', filters.categoryId);
-    if (filters?.q && filters.q.trim().length > 0) {
-      const like = `%${filters.q.trim()}%`;
-      q = q.or(`title.ilike.${like},description.ilike.${like}`);
+  
+    // Trae TODAS las columnas para que cumpla con el tipo Category
+    const { data: cats, error } = await supabase
+      .from('categories')
+      .select('*') // ← antes estaba 'id,name'
+      .eq('user_id', userId)
+      .order('name');
+  
+    if (error) {
+      setLoading(false);
+      throw error;
     }
-
-    const { data, error } = await q;
-
-    if (!error && data) setTodos(data as unknown as Todo[]);
+  
+    if (!cats || cats.length === 0) {
+      // Semilla por defecto respetando UNIQUE(user_id,name)
+      await supabase.from('categories').upsert(
+        DEFAULT_CATEGORIES.map((name) => ({ user_id: userId, name })),
+        { onConflict: 'user_id,name' }
+      );
+  
+      // Vuelve a leer TODAS las columnas
+      const { data: seeded, error: e2 } = await supabase
+        .from('categories')
+        .select('*') // ← importante
+        .eq('user_id', userId)
+        .order('name');
+  
+      if (e2) {
+        setLoading(false);
+        throw e2;
+      }
+      setCategories((seeded ?? []) as Category[]);
+    } else {
+      setCategories(cats as Category[]);
+    }
+  
     setLoading(false);
   }, [userId]);
+  
 
-  const add = useCallback(async (payload: {
-    title: string;
-    description?: string | null;
-    due_date?: string | null;
-    priority: Priority;
-    categoryName?: string | null;
-    category_id?: string | null; // si ya viene elegido
-  }) => {
-    if (!userId) throw new Error('No hay usuario');
+  // Cargar todos con filtros
+  const refresh = useCallback(
+    async (filters?: Partial<Filters>) => {
+      if (!userId) return;
+      setLoading(true);
 
-    let categoryId = payload.category_id ?? null;
+      let q = supabase
+        .from('todos')
+        .select('*, category:categories(id,name)')
+        .eq('user_id', userId)
+        .order('inserted_at', { ascending: false });
 
-    // Si llega categoryName, buscamos/creamos (único por user_id + name)
-    if (!categoryId && payload.categoryName && payload.categoryName.trim()) {
-      const name = payload.categoryName.trim();
-      const { data: existing } = await supabase
-        .from('categories')
-        .select('id')
-        .eq('name', name)
-        .limit(1)
-        .maybeSingle();
-
-      if (existing?.id) {
-        categoryId = existing.id;
-      } else {
-        const { data: created, error: catErr } = await supabase
-          .from('categories')
-          .insert({ user_id: userId, name })
-          .select('id')
-          .single();
-        if (catErr) throw catErr;
-        categoryId = created.id;
-        await refreshCategories();
+      if (filters?.status === 'active') q = q.eq('completed', false);
+      if (filters?.status === 'completed') q = q.eq('completed', true);
+      if (filters?.priority && filters.priority !== 'all') q = q.eq('priority', filters.priority);
+      if (filters?.categoryId && filters.categoryId !== 'all')
+        q = q.eq('category_id', filters.categoryId);
+      if (filters?.q && filters.q.trim().length > 0) {
+        const like = `%${filters.q.trim()}%`;
+        q = q.or(`title.ilike.${like},description.ilike.${like}`);
       }
-    }
 
-    const { error } = await supabase.from('todos').insert({
-      user_id: userId,
-      title: payload.title,
-      description: payload.description ?? null,
-      due_date: payload.due_date ?? null,
-      priority: payload.priority,
-      category_id: categoryId,
-    });
+      const { data, error } = await q;
+      if (!error && data) setTodos(data as unknown as Todo[]);
+      setLoading(false);
+    },
+    [userId]
+  );
 
-    if (error) throw error;
-  }, [userId, refreshCategories]);
+  // Crear
+  const add = useCallback(
+    async (payload: {
+      title: string;
+      description?: string | null;
+      due_date?: string | null;
+      priority: Priority;
+      categoryName?: string | null;
+      category_id?: string | null;
+    }) => {
+      if (!userId) throw new Error('No hay usuario');
 
+      let categoryId = payload.category_id ?? null;
+
+      // Buscar/crear categoría por nombre (única por usuario)
+      if (!categoryId && payload.categoryName && payload.categoryName.trim()) {
+        const name = payload.categoryName.trim();
+
+        const { data: existing } = await supabase
+          .from('categories')
+          .select('id')
+          .eq('user_id', userId)
+          .eq('name', name)
+          .maybeSingle();
+
+        if (existing?.id) {
+          categoryId = existing.id;
+        } else {
+          const { data: created, error: catErr } = await supabase
+            .from('categories')
+            .insert({ user_id: userId, name })
+            .select('id')
+            .single();
+          if (catErr) throw catErr;
+          categoryId = created.id;
+          await refreshCategories();
+        }
+      }
+
+      const { error } = await supabase.from('todos').insert({
+        user_id: userId,
+        title: payload.title,
+        description: payload.description ?? null,
+        due_date: payload.due_date ?? null,
+        priority: payload.priority,
+        category_id: categoryId,
+      });
+
+      if (error) throw error;
+    },
+    [userId, refreshCategories]
+  );
+
+  // Actualizar
   const update = useCallback(async (id: string, patch: Partial<Todo>) => {
     const { error } = await supabase
       .from('todos')
@@ -117,14 +161,13 @@ export function useTodos(userId: string | null) {
     if (error) throw error;
   }, []);
 
+  // Toggle completo
   const toggleCompleted = useCallback(async (id: string, completed: boolean) => {
-    const { error } = await supabase
-      .from('todos')
-      .update({ completed })
-      .eq('id', id);
+    const { error } = await supabase.from('todos').update({ completed }).eq('id', id);
     if (error) throw error;
   }, []);
 
+  // Eliminar
   const remove = useCallback(async (id: string) => {
     const { error } = await supabase.from('todos').delete().eq('id', id);
     if (error) throw error;
@@ -148,10 +191,11 @@ export function useTodos(userId: string | null) {
 
   const counts = useMemo(() => {
     const total = todos.length;
-    const active = todos.filter(t => !t.completed).length;
+    const active = todos.filter((t) => !t.completed).length;
     return { total, active, completed: total - active };
   }, [todos]);
 
+  // Primera carga
   useEffect(() => {
     if (!userId) return;
     (async () => {

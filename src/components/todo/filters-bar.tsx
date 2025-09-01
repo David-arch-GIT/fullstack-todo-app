@@ -1,18 +1,17 @@
 'use client';
 
 import * as React from 'react';
-import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import {
-  Select,
-  SelectTrigger,
-  SelectContent,
-  SelectItem,
-  SelectValue,
+  Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
 } from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
 import type { Filters } from '@/hooks/use-todos';
+import type { Category } from '@/types';
 
-type Category = { id: string; name: string };
+type StatusFilter = Filters['status'];
+type PriorityFilter = Filters['priority'];
+
 type Counts = { total: number; active: number; completed: number };
 
 type Props = {
@@ -24,31 +23,35 @@ type Props = {
 
 export function FiltersBar({ filters, onChange, categories, counts }: Props) {
   return (
-    <div className="grid gap-3 md:grid-cols-4">
+    <div className="grid gap-4 md:grid-cols-4 md:items-end">
       {/* Estado */}
-      <div className="grid gap-1">
-        <Label>Estado</Label>
+      <div className="space-y-1">
+        <span className="text-xs text-muted-foreground">Estado</span>
         <Select
           value={filters.status}
-          onValueChange={(v: Filters['status']) => onChange({ status: v })}
+          onValueChange={(v: StatusFilter) => onChange({ status: v })}
         >
-          <SelectTrigger><SelectValue placeholder="Todos" /></SelectTrigger>
+          <SelectTrigger>
+            <SelectValue placeholder="Todos" />
+          </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Todos</SelectItem>
-            <SelectItem value="active">Activos</SelectItem>
-            <SelectItem value="completed">Completados</SelectItem>
+            <SelectItem value="active">Activas</SelectItem>
+            <SelectItem value="completed">Completadas</SelectItem>
           </SelectContent>
         </Select>
       </div>
 
       {/* Prioridad */}
-      <div className="grid gap-1">
-        <Label>Prioridad</Label>
+      <div className="space-y-1">
+        <span className="text-xs text-muted-foreground">Prioridad</span>
         <Select
           value={filters.priority}
-          onValueChange={(v: Filters['priority']) => onChange({ priority: v })}
+          onValueChange={(v: PriorityFilter) => onChange({ priority: v })}
         >
-          <SelectTrigger><SelectValue placeholder="Todas" /></SelectTrigger>
+          <SelectTrigger>
+            <SelectValue placeholder="Todas" />
+          </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Todas</SelectItem>
             <SelectItem value="high">Alta</SelectItem>
@@ -59,34 +62,39 @@ export function FiltersBar({ filters, onChange, categories, counts }: Props) {
       </div>
 
       {/* Categoría */}
-      <div className="grid gap-1">
-        <Label>Categoría</Label>
+      <div className="space-y-1">
+        <span className="text-xs text-muted-foreground">Categoría</span>
         <Select
           value={filters.categoryId}
-          onValueChange={(v: Filters['categoryId']) => onChange({ categoryId: v })}
+          onValueChange={(v: string) =>
+            onChange({ categoryId: v === 'all' ? 'all' : v })}
         >
-          <SelectTrigger><SelectValue placeholder="Todas" /></SelectTrigger>
+          <SelectTrigger>
+            <SelectValue placeholder="Todas" />
+          </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Todas</SelectItem>
+            <SelectItem value="all">(Todas)</SelectItem>
             {categories.map((c) => (
-              <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+              <SelectItem key={c.id} value={c.id}>
+                {c.name}
+              </SelectItem>
             ))}
           </SelectContent>
         </Select>
       </div>
 
       {/* Búsqueda */}
-      <div className="grid gap-1">
-        <Label>Búsqueda</Label>
+      <div className="space-y-1">
+        <span className="text-xs text-muted-foreground">Búsqueda</span>
         <Input
-          placeholder="Título o descripción…"
           value={filters.q}
-          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-            onChange({ q: e.target.value })
-          }
+          onChange={(e) => onChange({ q: e.target.value })}
+          placeholder="Título o descripción…"
         />
-        <div className="mt-1 text-xs text-muted-foreground">
-          Total: {counts.total} · Activas: {counts.active} · Completadas: {counts.completed}
+        <div className="mt-1 flex items-center gap-3 text-[11px] text-muted-foreground">
+          <span>Total: <Badge variant="outline">{counts.total}</Badge></span>
+          <span>Activas: <Badge variant="outline">{counts.active}</Badge></span>
+          <span>Completadas: <Badge variant="outline">{counts.completed}</Badge></span>
         </div>
       </div>
     </div>

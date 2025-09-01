@@ -6,7 +6,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import AddTodoForm, { type AddTodoPayload } from '@/components/todo/add-todo-form';
 import { FiltersBar } from '@/components/todo/filters-bar';
 import TodoItem from '@/components/todo/todo-item';
-import BulkActions from '@/components/todo/bulk-actions'; // ⬅️ default
+import BulkActions from '@/components/todo/bulk-actions';
 import { useUser } from '@/hooks/use-user';
 import { useTodos, type Filters } from '@/hooks/use-todos';
 import { toast } from 'sonner';
