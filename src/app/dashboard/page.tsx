@@ -67,7 +67,7 @@ export default function DashboardPage() {
         <CardContent className="pt-6 overflow-visible">
           <AddTodoForm
             categories={categories}
-            onCreate={async (payload: any) => {
+            onCreate={async (payload: AddTodoPayload) => {
               try {
                 await add(payload);
                 await Promise.all([refresh(filters), refreshCategories()]);
