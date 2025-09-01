@@ -15,10 +15,12 @@ import {
 
 type Category = { id: string; name: string };
 
-type AddTodoPayload = {
+/** ⬇️ Exportamos el tipo para usarlo en el Dashboard */
+export type AddTodoPayload = {
   title: string;
   description?: string | null;
-  due_date?: string | null;          // YYYY-MM-DD
+  /** Fecha en formato YYYY-MM-DD (o null si no se define) */
+  due_date?: string | null;
   priority: 'low' | 'medium' | 'high';
   category_id?: string | null;
 };
@@ -44,13 +46,14 @@ export default function AddTodoForm({ categories, onCreate }: Props) {
 
     setPending(true);
     try {
-      await onCreate({
+      const payload: AddTodoPayload = {
         title: title.trim(),
         description: description.trim() ? description.trim() : null,
-        due_date: dueDate || null,
+        due_date: dueDate ? dueDate : null,
         priority,
-        category_id: categoryId ?? null,
-      });
+        category_id: categoryId || null,
+      };
+      await onCreate(payload);
 
       // limpiar
       setTitle('');
@@ -88,7 +91,6 @@ export default function AddTodoForm({ categories, onCreate }: Props) {
         </div>
 
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-          {/* Fecha */}
           <div className="grid gap-2">
             <Label htmlFor="due">Vence</Label>
             <Input
@@ -99,22 +101,16 @@ export default function AddTodoForm({ categories, onCreate }: Props) {
             />
           </div>
 
-          {/* Prioridad (arreglo de superposición/anchos) */}
           <div className="grid gap-2">
             <Label>Prioridad</Label>
             <Select
               value={priority}
               onValueChange={(v) => setPriority(v as 'low' | 'medium' | 'high')}
             >
-              <SelectTrigger className="w-44">
+              <SelectTrigger>
                 <SelectValue placeholder="Prioridad" />
               </SelectTrigger>
-              <SelectContent
-                position="popper"
-                sideOffset={6}
-                align="start"
-                className="z-50 w-[--radix-select-trigger-width] min-w-[12rem]"
-              >
+              <SelectContent>
                 <SelectItem value="low">Baja</SelectItem>
                 <SelectItem value="medium">Media</SelectItem>
                 <SelectItem value="high">Alta</SelectItem>
@@ -122,22 +118,17 @@ export default function AddTodoForm({ categories, onCreate }: Props) {
             </Select>
           </div>
 
-          {/* Categoría (arreglo de superposición/anchos) */}
           <div className="grid gap-2">
             <Label>Categoría</Label>
             <Select
               value={categoryId ?? 'none'}
               onValueChange={(v) => setCategoryId(v === 'none' ? undefined : v)}
             >
-              <SelectTrigger className="w-56">
+              <SelectTrigger>
                 <SelectValue placeholder="(Opcional)" />
               </SelectTrigger>
-              <SelectContent
-                position="popper"
-                sideOffset={6}
-                align="start"
-                className="z-50 w-[--radix-select-trigger-width] min-w-[14rem]"
-              >
+              <SelectContent>
+                {/* Evitamos value vacío para no romper el Select */}
                 <SelectItem value="none">(Sin categoría)</SelectItem>
                 {categories.map((c) => (
                   <SelectItem key={c.id} value={c.id}>
@@ -146,6 +137,10 @@ export default function AddTodoForm({ categories, onCreate }: Props) {
                 ))}
               </SelectContent>
             </Select>
+            {/* Texto auxiliar conservando tu diseño */}
+            <span className="mt-1 text-xs text-muted-foreground">
+              Elige una categoría para clasificar la tarea (opcional).
+            </span>
           </div>
         </div>
 

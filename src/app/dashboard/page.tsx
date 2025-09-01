@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent } from '@/components/ui/card';
-import AddTodoForm from '@/components/todo/add-todo-form';
+import AddTodoForm, { type AddTodoPayload } from '@/components/todo/add-todo-form';
 import { FiltersBar } from '@/components/todo/filters-bar';
 import TodoItem from '@/components/todo/todo-item';
 import BulkActions from '@/components/todo/bulk-actions'; // ⬅️ default

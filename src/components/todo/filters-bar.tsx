@@ -1,39 +1,63 @@
 'use client';
 
+import { useEffect, useMemo, useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
   Select, SelectTrigger, SelectContent, SelectItem, SelectValue,
 } from '@/components/ui/select';
 
-type Filters = {
+type Category = { id: string; name: string };
+
+export type Filters = {
   status: 'all' | 'active' | 'completed';
   priority: 'all' | 'low' | 'medium' | 'high';
   categoryId: 'all' | string;
   q: string;
 };
 
+type Counts = { total: number; active: number; completed: number };
+
 type Props = {
   filters: Filters;
   onChange: (patch: Partial<Filters>) => void;
-  categories: { id: string; name: string }[];
-  counts?: { total?: number; active?: number; completed?: number } | any;
+  categories: Category[];
+  counts: Counts;
 };
 
 export function FiltersBar({ filters, onChange, categories, counts }: Props) {
-  const total = counts?.total ?? 0;
-  const active = counts?.active ?? 0;
-  const completed = counts?.completed ?? 0;
+  // Debounce para búsqueda
+  const [qLocal, setQLocal] = useState(filters.q ?? '');
+
+  useEffect(() => {
+    // si los filtros llegan actualizados (ej, al resetear), reflejar en el input
+    setQLocal(filters.q ?? '');
+  }, [filters.q]);
+
+  useEffect(() => {
+    const id = setTimeout(() => {
+      if (qLocal !== filters.q) onChange({ q: qLocal });
+    }, 300);
+    return () => clearTimeout(id);
+  }, [qLocal, filters.q, onChange]);
+
+  const optionsCategories = useMemo(
+    () => [{ id: 'all', name: 'Todas' } as Category, ...categories],
+    [categories]
+  );
 
   return (
-    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-5">
-      <div className="grid gap-1">
+    <div className="grid gap-4 md:grid-cols-[repeat(4,minmax(0,1fr))]">
+      {/* Estado */}
+      <div className="grid gap-2">
         <Label>Estado</Label>
         <Select
           value={filters.status}
-          onValueChange={(v) => onChange({ status: v as Filters['status'] })}
+          onValueChange={(v: 'all' | 'active' | 'completed') => onChange({ status: v })}
         >
-          <SelectTrigger><SelectValue placeholder="Estado" /></SelectTrigger>
+          <SelectTrigger>
+            <SelectValue placeholder="Estado" />
+          </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Todos</SelectItem>
             <SelectItem value="active">Activos</SelectItem>
@@ -42,13 +66,16 @@ export function FiltersBar({ filters, onChange, categories, counts }: Props) {
         </Select>
       </div>
 
-      <div className="grid gap-1">
+      {/* Prioridad */}
+      <div className="grid gap-2">
         <Label>Prioridad</Label>
         <Select
           value={filters.priority}
-          onValueChange={(v) => onChange({ priority: v as Filters['priority'] })}
+          onValueChange={(v: 'all' | 'low' | 'medium' | 'high') => onChange({ priority: v })}
         >
-          <SelectTrigger><SelectValue placeholder="Prioridad" /></SelectTrigger>
+          <SelectTrigger>
+            <SelectValue placeholder="Prioridad" />
+          </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Todas</SelectItem>
             <SelectItem value="low">Baja</SelectItem>
@@ -58,33 +85,38 @@ export function FiltersBar({ filters, onChange, categories, counts }: Props) {
         </Select>
       </div>
 
-      <div className="grid gap-1">
+      {/* Categoría */}
+      <div className="grid gap-2">
         <Label>Categoría</Label>
         <Select
           value={filters.categoryId}
-          onValueChange={(v) => onChange({ categoryId: v })}
+          onValueChange={(v: string) => onChange({ categoryId: v })}
         >
-          <SelectTrigger><SelectValue placeholder="Categoría" /></SelectTrigger>
+          <SelectTrigger>
+            <SelectValue placeholder="Categoría" />
+          </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Todas</SelectItem>
-            {categories.map((c) => (
-              <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+            {optionsCategories.map((c) => (
+              <SelectItem key={c.id} value={c.id}>
+                {c.name}
+              </SelectItem>
             ))}
           </SelectContent>
         </Select>
       </div>
 
-      <div className="grid gap-1 lg:col-span-2">
+      {/* Búsqueda */}
+      <div className="grid gap-2">
         <Label>Búsqueda</Label>
         <Input
-          placeholder="Título o descripción…"
-          value={filters.q}
-          onChange={(e) => onChange({ q: e.target.value })}
+          placeholder="Título o descripción..."
+          value={qLocal}
+          onChange={(e) => setQLocal(e.target.value)}
         />
-        <div className="mt-1 flex gap-2 text-xs text-muted-foreground">
-          <span className="rounded-full bg-muted px-2 py-0.5">Total: {total}</span>
-          <span className="rounded-full bg-muted px-2 py-0.5">Activas: {active}</span>
-          <span className="rounded-full bg-muted px-2 py-0.5">Completadas: {completed}</span>
+        <div className="flex gap-4 text-xs text-muted-foreground">
+          <span>Total: {counts.total}</span>
+          <span>Activas: {counts.active}</span>
+          <span>Completadas: {counts.completed}</span>
         </div>
       </div>
     </div>
