@@ -23,7 +23,10 @@ export default function LoginClient() {
     const { error } = await supabase.auth.signInWithPassword({ email, password })
     setLoading(false)
 
-    if (error) return toast.error('Error al iniciar sesión', { description: error.message })
+    if (error) {
+      toast.error('Error al iniciar sesión', { description: error.message })
+      return
+    }
 
     toast.success('Sesión iniciada')
     const redirect = params.get('redirect') || '/dashboard'

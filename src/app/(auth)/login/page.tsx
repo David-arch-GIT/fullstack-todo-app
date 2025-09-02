@@ -1,8 +1,9 @@
 import { Suspense } from "react";
 import LoginClient from "./login.client";
 
-// Evita que Next intente pre-render estático
+// Evita la prerenderización estática y el error en build
 export const dynamic = "force-dynamic";
+// (opcional): export const revalidate = 0;
 
 export default function Page() {
   return (
