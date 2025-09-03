@@ -1,15 +1,17 @@
 // src/lib/supabase/client.ts
 'use client';
 
-import { createClient as createSupabaseClient, type SupabaseClient } from '@supabase/supabase-js';
+import { createBrowserClient } from '@supabase/ssr';
+import type { SupabaseClient } from '@supabase/supabase-js';
 
-let _client: SupabaseClient | null = null;
+type BrowserClient = SupabaseClient;
+
+let _client: BrowserClient | null = null;
 
 /**
- * Devuelve un cliente de Supabase (singleton en el navegador).
- * Se usa en componentes cliente (use client).
+ * Devuelve un cliente de Supabase singleton en el navegador.
  */
-export function createClient(): SupabaseClient {
+export function getSupabaseClient(): BrowserClient {
   if (_client) return _client;
 
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -17,23 +19,14 @@ export function createClient(): SupabaseClient {
 
   if (!url || !anon) {
     throw new Error(
-      'Faltan variables de entorno NEXT_PUBLIC_SUPABASE_URL o NEXT_PUBLIC_SUPABASE_ANON_KEY'
+      'Faltan variables NEXT_PUBLIC_SUPABASE_URL o NEXT_PUBLIC_SUPABASE_ANON_KEY'
     );
   }
 
-  _client = createSupabaseClient(url, anon, {
-    auth: {
-      persistSession: true,
-      autoRefreshToken: true,
-      detectSessionInUrl: true,
-    },
-  });
-
-  return _client;
+  // crea y guarda; el return nunca es null (evita el error de tipos)
+  const client = createBrowserClient(url, anon);
+  _client = client;
+  return client;
 }
 
-/** Conveniencia: singleton ya inicializado */
-export const supabase: SupabaseClient = createClient();
-
-// (Opcional) compat por si en algún sitio usas default import.
-// export default supabase;
+export const supabase: BrowserClient = getSupabaseClient();

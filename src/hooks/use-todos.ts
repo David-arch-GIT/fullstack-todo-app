@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/lib/supabase/client';
 import type { Category, Priority, Todo } from '@/types';
 
+
 export type StatusFilter = 'all' | 'active' | 'completed';
 export type PriorityFilter = 'all' | Priority;
 

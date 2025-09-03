@@ -1,40 +1,44 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
-import Link from 'next/link'
-import { useRouter, useSearchParams } from 'next/navigation'
-import { toast } from 'sonner'
-import { supabase } from '@/lib/supabase/client'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Label } from '@/components/ui/label'
-import { Input } from '@/components/ui/input'
-import { Button } from '@/components/ui/button'
+import { useState } from 'react';
+import Link from 'next/link';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { toast } from 'sonner';
+import { getSupabaseClient } from '@/lib/supabase/client';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 
 export default function LoginClient() {
-  const router = useRouter()
-  const params = useSearchParams()
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [loading, setLoading] = useState(false)
+  const router = useRouter();
+  const params = useSearchParams();
+  const supabase = getSupabaseClient();
+
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
 
   async function onSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    setLoading(true)
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
-    setLoading(false)
+    e.preventDefault();
+    setLoading(true);
+
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+
+    setLoading(false);
 
     if (error) {
-      toast.error('Error al iniciar sesión', { description: error.message })
-      return
+      toast.error('Error al iniciar sesión', { description: error.message });
+      return;
     }
 
-    toast.success('Sesión iniciada')
-    const redirect = params.get('redirect') || '/dashboard'
-    router.replace(redirect)
+    toast.success('Sesión iniciada');
+    const redirect = params.get('redirect') || '/dashboard';
+    router.replace(redirect);
   }
 
   return (
-    <main className="mx-auto grid max-w-md gap-6 py-10">
+    <main className="mx-auto grid max-w-md gap-6">
       <div className="text-center">
         <h1 className="text-2xl font-semibold">Inicia sesión</h1>
       </div>
@@ -54,7 +58,6 @@ export default function LoginClient() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                autoComplete="email"
               />
             </div>
 
@@ -66,7 +69,6 @@ export default function LoginClient() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                autoComplete="current-password"
               />
             </div>
 
@@ -84,5 +86,5 @@ export default function LoginClient() {
         </CardContent>
       </Card>
     </main>
-  )
+  );
 }
